@@ -1,0 +1,44 @@
+---
+description: Conventions for Sonarr/Radarr API interactions in Tdarr flow plugins
+globs: FlowPluginsTs/**/*.ts
+alwaysApply: false
+---
+
+# Arr API Pattern
+
+When writing Tdarr plugins that interact with Sonarr/Radarr:
+
+## Headers & Host
+
+```typescript
+const headers = {
+  'Content-Type': 'application/json',
+  'X-Api-Key': String(args.inputs.arr_api_key),
+  Accept: 'application/json',
+};
+const arrHost = String(args.inputs.arr_host).trim().replace(/\/$/, '');
+```
+
+## ID Lookup (two-step)
+
+1. Try IMDB regex on file path: `/\b(tt|nm|co|ev|ch|ni)\d{7,10}?\b/i`
+2. If found: `GET /api/v3/{movie|series}/lookup?term=imdb:{id}`
+3. Fallback: `GET /api/v3/parse?title={encodedFilename}` — response shape differs:
+   - Radarr: `data.movie.id`, `data.parsedMovieInfo.releaseGroup`
+   - Sonarr: `data.series.id`, `data.parsedEpisodeInfo.releaseGroup`
+
+## Delegate Pattern
+
+Use `arr` dropdown input (`radarr` | `sonarr`) to switch endpoint names (`movie` vs `series`) and response accessors.
+
+## Refresh After Update
+
+```typescript
+POST /api/v3/command
+// Radarr: { name: "RefreshMovie", movieIds: [id] }
+// Sonarr: { name: "RefreshSeries", seriesId: id }
+```
+
+## Parse Endpoint
+
+Stateless — just parses a filename string. File doesn't need to exist in arr. Useful for extracting release group without needing a media ID.

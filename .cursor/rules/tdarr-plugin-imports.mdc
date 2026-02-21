@@ -1,0 +1,21 @@
+---
+description: TypeScript path aliases don't work at runtime — use relative imports in Tdarr plugins
+globs: FlowPluginsTs/LocalFlowPlugins/**/*.ts
+alwaysApply: false
+---
+
+# Tdarr Plugin Imports
+
+**Always use relative paths** in plugin TypeScript source files, not the `FlowHelpers/*` path alias from tsconfig.
+
+```typescript
+// CORRECT — works at runtime in Tdarr's Node.js
+import { checkFfmpegCommandInit } from '../../../../FlowHelpers/1.0.0/interfaces/flowUtils';
+
+// WRONG — tsc compiles fine but Node.js can't resolve at runtime
+import { checkFfmpegCommandInit } from 'FlowHelpers/1.0.0/interfaces/flowUtils';
+```
+
+**Why:** `tsc` does NOT rewrite path aliases in emitted JS. The compiled `require("FlowHelpers/...")` is not a real Node.js module, so Tdarr's runtime throws `MODULE_NOT_FOUND`. Relative paths (`../../../../FlowHelpers/...`) resolve correctly both at compile time and at runtime.
+
+The `moduleNameMapper` in `jest.config.js` maps the alias for tests, but the plugin source itself must use relative paths.

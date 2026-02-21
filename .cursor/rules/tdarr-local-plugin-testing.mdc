@@ -1,0 +1,34 @@
+---
+description: Testing gotchas for LocalFlowPlugins that use the FlowHelpers path alias
+globs: tests/FlowPlugins/LocalFlowPlugins/**/*.test.ts
+alwaysApply: false
+---
+
+# Testing Local Flow Plugins
+
+Local plugins import via `FlowHelpers/*` path alias (resolved by `moduleNameMapper` in jest.config.js). This causes two gotchas:
+
+## Mocking default exports (fileMoveOrCopy, etc.)
+
+Use `__esModule: true` in the factory, then `require` the mock reference separately. Do NOT reference `const` variables in the factory (they're `undefined` due to hoisting).
+
+```typescript
+jest.mock('../../../../../../FlowPluginsTs/FlowHelpers/1.0.0/fileMoveOrCopy', () => ({
+  __esModule: true,
+  default: jest.fn().mockResolvedValue(true),
+}));
+
+const { default: mockFileMoveOrCopy } = require('../../../../../../FlowPluginsTs/FlowHelpers/1.0.0/fileMoveOrCopy');
+```
+
+## Mocking methods/lib
+
+```typescript
+jest.mock('../../../../../../methods/lib', () => () => ({
+  loadDefaultValues: jest.fn((inputs) => inputs),
+}));
+```
+
+## moduleNameMapper
+
+`jest.config.js` maps `^FlowHelpers/(.*)$` → `<rootDir>/FlowPluginsTs/FlowHelpers/$1`. This was added to support local plugins; without it, any import from `FlowHelpers/*` fails in tests.
