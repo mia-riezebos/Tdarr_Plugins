@@ -2,8 +2,8 @@ import {
   IpluginDetails,
   IpluginInputArgs,
   IpluginOutputArgs,
-} from 'FlowHelpers/1.0.0/interfaces/interfaces';
-import { checkFfmpegCommandInit } from 'FlowHelpers/1.0.0/interfaces/flowUtils';
+} from '../../../../FlowHelpers/1.0.0/interfaces/interfaces';
+import { checkFfmpegCommandInit } from '../../../../FlowHelpers/1.0.0/interfaces/flowUtils';
 
 /* eslint no-plusplus: ["error", { "allowForLoopAfterthoughts": true }] */
 const details = (): IpluginDetails => ({
